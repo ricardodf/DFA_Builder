@@ -2,101 +2,89 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class dfa_builder {
-    public static void main(String[] args){
+    public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        int flag;   //Un indicador para romper bucles
-        String inputBuffer; //Recibe el dato de entrada sin limpiar
-        String[] alfabeto, estadosTotales, estadosFinales, cadena; //Almacenando los datos del AFD
+        int flag;
+        String input; // Buffer for scanner
+        String[] alphabet, states, finalStates, strToEvaluate;
 
-        // Entrada de alfabeto
-        System.out.print("Ingresar alfabeto (cada elemento dividido por comas y/o espacios): ");
-        inputBuffer = sc.nextLine();
-        alfabeto = inputBuffer.split("\\s*(,|\\s)\\s*"); //De la entrada, quita cualquier espacio y/o coma
+        // ALPHABET
+        System.out.print("Alphabet (each element divided by commas or spaces): ");
+        alphabet = sc.nextLine().split("\\s*(,|\\s)\\s*");
 
-        //Entrada de los estados del AFD
-        System.out.print("Ingresar estados del AFD (cada elemento dividido por comas y/o espacios): ");
-        inputBuffer = sc.nextLine();
-        estadosTotales = inputBuffer.split("\\s*(,|\\s)\\s*");
+        // STATES
+        System.out.print("States (each element divided by commas or spaces): ");
+        states = sc.nextLine().split("\\s*(,|\\s)\\s*");
 
-        //Entrada de los estados finales
+        // FINAL STATES
         do {
             flag = 0;
-            System.out.print("Ingresar estados finales validos (cada elemento dividido por comas y/o espacios): ");
-            inputBuffer = sc.nextLine();
-            estadosFinales = inputBuffer.split("\\s*(,|\\s)\\s*");
+            System.out.print("Final States (each element divided by commas or spaces): ");
+            finalStates = sc.nextLine().split("\\s*(,|\\s)\\s*");
 
-            // Comprobación: Revisa si cada estado final ingresado existe dentro del conjunto de los estados Q
-            for (String estado : estadosFinales) {
-                if (!Arrays.asList(estadosTotales).contains(estado)) {
+            // Check if every final states exists in the states
+            for (String estado : finalStates){
+                if (!Arrays.asList(states).contains(estado)){
                     flag = 0;
                     break;
                 } else
                     flag = 1;
             }
-            // Si es una entrada inválida, vuelve a pedir la entrada
         } while (flag == 0);
 
-        // Tabla de transiciones, toma las dimensiones de la cardinalidad de Q (estados) y Sigma (alfabeto)
-        String[][] transiciones = new String[estadosTotales.length][alfabeto.length];
+        // Table if transitions, Q (states) x Sigma (alphabet)
+        String[][] transitions = new String[states.length][alphabet.length];
 
-        //Ingresando cada transición conforme al alfabeto y estados
-        for (int i = 0; i < transiciones.length; i++) {
-            for (int j = 0; j < transiciones[0].length; j++) {
+        // For each transition...
+        for (int i = 0; i < transitions.length; i++) {
+            for (int j = 0; j < transitions[0].length; j++) {
                 do {
                     flag = 0;
-                    System.out.printf("Ingresar transicion valida (%s, %s): ", estadosTotales[i], alfabeto[j]);
-                    inputBuffer = sc.nextLine();
-                    if (Arrays.asList(estadosTotales).contains(inputBuffer)) {
-                        transiciones[i][j] = inputBuffer;
+                    System.out.printf("Transition for (%s, %s): ", states[i], alphabet[j]);
+                    input = sc.nextLine();
+                    if (Arrays.asList(states).contains(input)) {
+                        transitions[i][j] = input;
                         flag = 1;
                     }
                 } while (flag == 0);
             }
         }
 
-        //Variables a utilizar para evaluar cadena
-        String estadoActual, caminoActual;
-        int indexEstado = 0, indexCamino = 0;
+        String currentState;
+        int indexState = 0, indexPath = 0;
 
-        //Continuar ciclo mientras que la cadena no sea "-1"
+        // Check a string if its valid
         do {
-            inputBuffer = "";
-            estadoActual = estadosTotales[0]; //El estado inicial va ser el primer estado dentro del conjunto de los estados
+            currentState = states[0];
             System.out.print("Ingresar cadena a evaluar: ");
-            inputBuffer = sc.nextLine();
+            input = sc.nextLine();
 
-            // Si es distinto que "-1"
-            if (!inputBuffer.equals("-1")) {
-                cadena = inputBuffer.split("(?!^)"); //Dividir cadena por letra y guardarlo en un arreglo
-                for (int i = 0; i < inputBuffer.length(); i++) {
-                    if (!Arrays.asList(alfabeto).contains(cadena[i])) {  //Si una letra de al cadena no pertence al alfabeto, se rechaza la cadena
-                        System.out.printf("Elemento '%s' no pertenece al alfabeto\n", cadena[i]);
-                        estadoActual = "invalid";
+            // IF the string is not finished
+            if (!input.equals("-1")) {
+                strToEvaluate = input.split("(?!^)");
+                for (int i = 0; i < input.length(); i++) {
+                    if (!Arrays.asList(alphabet).contains(strToEvaluate[i])) {  
+                        System.out.printf("Elemento '%s' no pertenece al alfabeto\n", strToEvaluate[i]);
+                        currentState = "invalid";
                         break;
                     }
-                    caminoActual = cadena[i]; //caminoActual toma el indice de la letra
-                    //Encontrar index del estadoActual
-                    for (int indexOnStatus = 0; indexOnStatus < estadosTotales.length; indexOnStatus++)
-                        if (estadoActual.equals(estadosTotales[indexOnStatus])) indexEstado = indexOnStatus;
-                    //Encontrar index del camino
-                    for (int indexOnPath = 0; indexOnPath < alfabeto.length; indexOnPath++) {
-                        if (caminoActual.equals(alfabeto[indexOnPath])) indexCamino = indexOnPath;
+                    currentState = strToEvaluate[i]; //caminoActual toma el indice de la letra
+                    for (int indexOnStatus = 0; indexOnStatus < states.length; indexOnStatus++)
+                        if (currentState.equals(states[indexOnStatus])) indexState = indexOnStatus;
+                    for (int indexOnPath = 0; indexOnPath < alphabet.length; indexOnPath++) {
+                        if (currentState.equals(alphabet[indexOnPath])) indexPath = indexOnPath;
                     }
-                    //El nuevo estado es dado por los dos indice encontrados
-                    estadoActual = transiciones[indexEstado][indexCamino];
+                    currentState = transitions[indexState][indexPath];
                 }
-
-                //Buscar si el estadoActual pertenece dentro del conjunto de los estados finales
-                for (String estadoFinal : estadosFinales) {
-                    if (estadoActual.equals(estadoFinal))
+                
+                for (String estadoFinal : finalStates) {
+                    if (currentState.equals(estadoFinal))
                         System.out.println("Cadena Aceptada");
                     else
                         System.out.println("Cadena Rechazada");
                 }
             }
-        } while (!inputBuffer.equals("-1"));
+        } while (!input.equals("-1"));
         sc.close();
     }
 }
-
-
